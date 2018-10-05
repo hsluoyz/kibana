@@ -48,6 +48,9 @@ const MIN_LINE_LENGTH = 20;
  */
 module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl) {
   const cellTemplate = _.template(noWhiteSpace(require('ui/doc_table/components/table_row/cell.html')));
+  const cellTpTemplate = _.template(noWhiteSpace(require('ui/doc_table/components/table_row/cell_tp.html')));
+  const cellFpTemplate = _.template(noWhiteSpace(require('ui/doc_table/components/table_row/cell_fp.html')));
+  const cellFnTemplate = _.template(noWhiteSpace(require('ui/doc_table/components/table_row/cell_fn.html')));
   const truncateByHeightTemplate = _.template(noWhiteSpace(require('ui/partials/truncate_by_height.html')));
 
   return {
@@ -139,9 +142,22 @@ module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl
           openRowHtml
         ];
 
+        const bot = row._source.status === 200;
+        const tag = row._source.userAgent.indexOf('Azure') !== -1;
+        let $template;
+        if (tag && bot) {
+          $template = cellTpTemplate;
+        } else if (!tag && bot) {
+          $template = cellFpTemplate;
+        } else if (tag && !bot) {
+          $template = cellFnTemplate;
+        } else {
+          $template = cellTemplate;
+        }
+
         const mapping = indexPattern.fields.byName;
         if (indexPattern.timeFieldName) {
-          newHtmls.push(cellTemplate({
+          newHtmls.push($template({
             timefield: true,
             formatted: _displayField(row, indexPattern.timeFieldName),
             filterable: (
@@ -158,7 +174,7 @@ module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl
             && mapping[column].filterable
             && _.isFunction($scope.filter);
 
-          newHtmls.push(cellTemplate({
+          newHtmls.push($template({
             timefield: false,
             sourcefield: (column === '_source'),
             formatted: _displayField(row, column, true),
