@@ -26,6 +26,9 @@ import '../../filters/short_dots';
 import './table_row.less';
 import { noWhiteSpace } from '../../../../core_plugins/kibana/common/utils/no_white_space';
 import openRowHtml from './table_row/open.html';
+import openTpRowHtml from './table_row/open_tp.html';
+import openFpRowHtml from './table_row/open_fp.html';
+import openFnRowHtml from './table_row/open_fn.html';
 import detailsHtml from './table_row/details.html';
 import { uiModules } from '../../modules';
 import { disableFilter } from '../../filter_bar';
@@ -137,23 +140,29 @@ module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl
         const indexPattern = $scope.indexPattern;
         $scope.flattenedRow = indexPattern.flattenHit(row);
 
-        // We just create a string here because its faster.
-        const newHtmls = [
-          openRowHtml
-        ];
-
         const bot = row._source.status === 200;
         const tag = row._source.userAgent.indexOf('Azure') !== -1;
+
+        let $openHtml;
         let $template;
         if (tag && bot) {
+          $openHtml = openTpRowHtml;
           $template = cellTpTemplate;
         } else if (!tag && bot) {
+          $openHtml = openFpRowHtml;
           $template = cellFpTemplate;
         } else if (tag && !bot) {
+          $openHtml = openFnRowHtml;
           $template = cellFnTemplate;
         } else {
+          $openHtml = openRowHtml;
           $template = cellTemplate;
         }
+
+        // We just create a string here because its faster.
+        const newHtmls = [
+          $openHtml
+        ];
 
         const mapping = indexPattern.fields.byName;
         if (indexPattern.timeFieldName) {
