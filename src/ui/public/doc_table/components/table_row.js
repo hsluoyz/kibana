@@ -141,17 +141,23 @@ module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl
         $scope.flattenedRow = indexPattern.flattenHit(row);
 
         const bot = row._source.status === 200;
-        const tag = row._source.userAgent.indexOf('Azure') !== -1;
+        let $tag;
+        if ('userAgent' in row._source) {
+          $tag = row._source.userAgent.toLowerCase().indexOf('bot') !== -1;
+        } else {
+          $tag = false;
+        }
+
 
         let $openHtml;
         let $template;
-        if (tag && bot) {
+        if ($tag && bot) {
           $openHtml = openTpRowHtml;
           $template = cellTpTemplate;
-        } else if (!tag && bot) {
+        } else if (!$tag && bot) {
           $openHtml = openFpRowHtml;
           $template = cellFpTemplate;
-        } else if (tag && !bot) {
+        } else if ($tag && !bot) {
           $openHtml = openFnRowHtml;
           $template = cellFnTemplate;
         } else {
