@@ -140,24 +140,29 @@ module.directive('kbnTableRow', function ($compile, $httpParamSerializer, kbnUrl
         const indexPattern = $scope.indexPattern;
         $scope.flattenedRow = indexPattern.flattenHit(row);
 
-        const bot = row._source.status === 200;
         let $tag;
-        if ('userAgent' in row._source) {
-          $tag = row._source.userAgent.toLowerCase().indexOf('bot') !== -1;
+        if ('tag' in row._source) {
+          $tag = row._source.tag === 'bot';
         } else {
           $tag = false;
         }
 
+        let $guess;
+        if ('guess' in row._source) {
+          $guess = row._source.guess === 'bot';
+        } else {
+          $guess = false;
+        }
 
         let $openHtml;
         let $template;
-        if ($tag && bot) {
+        if ($tag && $guess) {
           $openHtml = openTpRowHtml;
           $template = cellTpTemplate;
-        } else if (!$tag && bot) {
+        } else if (!$tag && $guess) {
           $openHtml = openFpRowHtml;
           $template = cellFpTemplate;
-        } else if ($tag && !bot) {
+        } else if ($tag && !$guess) {
           $openHtml = openFnRowHtml;
           $template = cellFnTemplate;
         } else {
